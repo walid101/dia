@@ -554,9 +554,15 @@ class Dia:
         """
         if self.dac_model is None:
             raise RuntimeError("DAC model is required for loading audio prompts but was not loaded.")
+        
         audio, sr = torchaudio.load(audio_path, channels_first=True)  # C, T
+        
+        if audio.shape[0] > 1: 
+            audio = torch.mean(audio, dim=0, keepdim=True) # Convert to mono [1, T]
+
         if sr != DEFAULT_SAMPLE_RATE:
             audio = torchaudio.functional.resample(audio, sr, DEFAULT_SAMPLE_RATE)
+            
         return self._encode(audio.to(self.device))
 
     def save_audio(self, path: str, audio: np.ndarray):
